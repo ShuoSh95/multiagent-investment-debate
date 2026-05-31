@@ -1,0 +1,53 @@
+# ==============================================================
+#  Secrets — NEVER commit real API keys
+# ==============================================================
+.env
+.env.local
+*.key
+
+# ==============================================================
+#  Python
+# ==============================================================
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# ==============================================================
+#  Data & generated artifacts (rebuildable / large / private /
+#  copyrighted source material) — do NOT commit
+# ==============================================================
+# Vector DB, BM25 index, raw master corpora (copyrighted books/memos),
+# and the local debate history database.
+data/
+debate_logs/
+
+# HuggingFace / model caches if ever placed in-repo
+*.bin
+*.safetensors
+
+# ==============================================================
+#  Local notes / scratch (keep private)
+# ==============================================================
+ChatHistory
+ChatHistory2
+
+# ==============================================================
+#  OS / editor cruft
+# ==============================================================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
