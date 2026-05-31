@@ -138,8 +138,7 @@ InvestmentAgent/
 │
 ├── scrapers/                # 数据采集脚本
 │   ├── github_sources.py    # 多 CDN fallback 的 GitHub 下载
-│   ├── official_sites.py    # 官方网站直接下载
-│   └── zlib_downloader.py   # 可选 Z-Library 集成
+│   └── official_sites.py    # 官方网站 / Wikipedia 等公开来源下载
 │
 ├── scripts/                 # 测试 / 基准脚本
 │   ├── smoke_e2e.py         # 端到端冒烟测试

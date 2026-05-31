@@ -88,7 +88,6 @@ MASTER_CONFIGS = {
             }
         ],
         "official_sources": [],
-        "zlib_queries": [],
     },
     "dalio": {
         "display_name": "瑞·达利欧",
@@ -120,7 +119,6 @@ MASTER_CONFIGS = {
                 "source_type": "whitepaper",
             }
         ],
-        "zlib_queries": [],
     },
     "marks": {
         "display_name": "霍华德·马克斯",
@@ -139,7 +137,6 @@ MASTER_CONFIGS = {
                 "source_type": "memo",
             }
         ],
-        "zlib_queries": [],
     },
     "greenblatt": {
         "display_name": "乔尔·格林布拉特",
@@ -170,10 +167,6 @@ MASTER_CONFIGS = {
                 "source_type": "article",
             },
         ],
-        "zlib_queries": [
-            "The Little Book That Beats the Market Joel Greenblatt",
-            "You Can Be a Stock Market Genius Joel Greenblatt",
-        ],
     },
     "lynch": {
         "display_name": "彼得·林奇",
@@ -195,10 +188,6 @@ MASTER_CONFIGS = {
                 "filename": "wikipedia_beating_the_street.html",
                 "source_type": "article",
             },
-        ],
-        "zlib_queries": [
-            "One Up on Wall Street Peter Lynch",
-            "Beating the Street Peter Lynch",
         ],
     },
 }

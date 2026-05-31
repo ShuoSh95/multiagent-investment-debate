@@ -31,7 +31,6 @@ def _acquire(master_key: str) -> bool:
     """Run all applicable scrapers for a master."""
     from scrapers.github_sources import acquire_github
     from scrapers.official_sites import acquire_official
-    from scrapers.zlib_downloader import acquire_zlib
 
     config = MASTER_CONFIGS[master_key]
     display = config["display_name"]
@@ -49,11 +48,6 @@ def _acquire(master_key: str) -> bool:
     if config.get("official_sources"):
         print(f"\n  [Source: Official Sites]")
         if not acquire_official(master_key):
-            ok = False
-
-    if config.get("zlib_queries"):
-        print(f"\n  [Source: Z-Library]")
-        if not acquire_zlib(master_key):
             ok = False
 
     raw_dir = RAW_DIR / master_key

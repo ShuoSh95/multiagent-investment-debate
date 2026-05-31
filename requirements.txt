@@ -20,6 +20,3 @@ ebooklib
 sentence-transformers
 # Web UI (v1.0)
 streamlit
-# Optional: Z-Library integration (uncomment if needed)
-# zlibrary-sync
-# diskcache
