@@ -296,37 +296,6 @@ HF_ENDPOINT=https://hf-mirror.com # 国内加速 HuggingFace
 
 ---
 
-## 🧠 LLM 与 Embedding Provider
-
-### 支持的 Chat Provider
-
-| Provider | 默认模型 | 注册门槛 | 单场辩论成本 | 备注 |
-|---|---|---|---|---|
-| **gemini** ⭐ | gemini-2.5-flash | Google 账号 + 免费 API Key | 几乎免费 | 自带 Web Search Grounding，国内访问需代理 |
-| **deepseek** | deepseek-chat | 微信 / 国内手机号 | ~¥0.05 | 国内直连最稳，性价比之王 |
-| **openai** | gpt-4o-mini | 境外卡 + 代理 | ~¥0.5 | |
-| **anthropic** | claude-sonnet-4-5 | 境外卡 + 代理 | ~¥3-8 | 推理最深入，搭配 `LLM_RESEARCHER_MODEL` 只给研究员用性价比更好 |
-| **qwen** | qwen-plus | 阿里云账号 | ~¥0.1 | 中文金融语料最多 |
-| **zhipu** | glm-4-plus | 智谱账号 | ~¥0.1 | |
-| **doubao** | doubao-pro-32k | 火山方舟账号 | ~¥0.05 | 速度快、并发无限 |
-
-**如何切换？** 改 `.env` 的 `LLM_PROVIDER` + 对应 API Key 一行就够，代码零改动。
-
-### 支持的 Embedding Provider
-
-| Provider | 模型 | 维度 | 速度 | 成本 |
-|---|---|---|---|---|
-| **local** ⭐ | `BAAI/bge-m3` | 1024 | Apple M 系 ~75ms/query (MPS) | 免费，2.3GB 模型一次性下载 |
-| **openai** | `text-embedding-3-large` | 3072 | API 延迟 ~300ms | $0.13 / 1M tokens |
-
-**切换后需要重建向量库**（维度变了 Chroma 无法兼容）：
-
-```bash
-EMBEDDING_PROVIDER=openai python -m rag.build_kb --master all --skip-acquire --rebuild
-```
-
----
-
 ## 🔎 Web Search 机制
 
 **两层检索：**
