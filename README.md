@@ -483,22 +483,6 @@ A: 免费额度是 1500 req/day（Gemini 2.5 Flash）。一场辩论约 25-30 �
 
 ---
 
-## 📋 版权与致谢
-
-- **LLM 框架**: [LangChain](https://github.com/langchain-ai/langchain) + [LangGraph](https://github.com/langchain-ai/langgraph)
-- **向量库**: [ChromaDB](https://github.com/chroma-core/chroma)
-- **Embedding 模型**: [BAAI/bge-m3](https://huggingface.co/BAAI/bge-m3) (Apache 2.0)
-- **Web Search**: Google Gemini Grounding API / [Tavily](https://tavily.com/)
-- **数据源**:
-  - 巴菲特股东信来自 Berkshire Hathaway 官方公开文件 / 多个 GitHub 整理仓库
-  - Howard Marks Memos 来自 [Oaktree Capital 官方](https://www.oaktreecapital.com/insights) 公开备忘录
-  - Ray Dalio *Principles* 精选摘录来自其 [GitHub 公开仓库](https://github.com/ray-dalio) 与公开演讲稿
-
-> ⚠️ **免责声明**: 本系统为教育 / 研究用途，输出的"投资建议"是多 Agent LLM 辩论后的总结，
-> **绝不构成真实世界的投资顾问服务**。真实投资决策请咨询持牌专业人士并自行承担风险。
-
----
-
 ## 🛠️ Roadmap
 
 - [ ] 真·串行辩论模式（后发言者可实时看到前发言者同轮观点）
