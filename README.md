@@ -1,8 +1,18 @@
-# 🏛️ AI 投资决策器 · 多大师辩论系统
+# 🏛️ 多Agent投票决策器 · AI版金融大鳄辩论赛
+
+**中文** | [English](README_EN.md)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-Multi--Agent-green.svg)](https://github.com/langchain-ai/langgraph)
+[![Streamlit](https://img.shields.io/badge/Streamlit-Web%20UI-FF4B4B.svg)](https://streamlit.io/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/ShuoSh95/multiagent-investment-debate/pulls)
 
 > 让**巴菲特、达利欧、马克斯、格林布拉特、林奇**五位投资大师在你的电脑里"同台辩论"，
 > 结合实时 Web 数据 + 大师本人原著 RAG 检索，
 > 最后由一位中立研究员 Agent 给出结构化投资建议。
+
+📖 **[看一场真实辩论实录 →](docs/example_debate.md)**（问题："美伊迎来和平转机，能大笔买入 A 股大盘指数基金吗？"——5 位大师 6 轮交锋，全票看空）
 
 ---
 
@@ -25,7 +35,6 @@
 - [📂 目录结构](#-目录结构)
 - [🚀 快速开始](#-快速开始)
 - [⚙️ 配置说明 (.env)](#-配置说明-env)
-- [🧠 LLM 与 Embedding Provider](#-llm-与-embedding-provider)
 - [🔎 Web Search 机制](#-web-search-机制)
 - [📚 RAG 知识库](#-rag-知识库)
 - [💬 辩论流程详解](#-辩论流程详解)
