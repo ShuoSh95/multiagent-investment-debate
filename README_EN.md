@@ -6,6 +6,13 @@
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Multi--Agent-green.svg)](https://github.com/langchain-ai/langgraph)
 [![Streamlit](https://img.shields.io/badge/Streamlit-Web%20UI-FF4B4B.svg)](https://streamlit.io/)
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Try_it-FF4B4B.svg)](https://multiagent-investment-debate-jossc2ahmvq6iywxdrwsgp.streamlit.app/)
+
+---
+
+### 🚀 [Try the live demo →](https://multiagent-investment-debate-jossc2ahmvq6iywxdrwsgp.streamlit.app/)
+
+(Free public trial · daily quota · gallery replays when the quota is used up)
 
 ---
 

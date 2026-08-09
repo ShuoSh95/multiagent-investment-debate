@@ -53,6 +53,18 @@ def _sync_streamlit_secrets_to_env() -> None:
 
 _sync_streamlit_secrets_to_env()
 
+# Sensible defaults for Streamlit Community Cloud when only API keys were
+# pasted into Secrets (common first-deploy mistake).
+if os.getenv("GOOGLE_API_KEY") and not os.getenv("LLM_PROVIDER"):
+    os.environ["LLM_PROVIDER"] = "gemini"
+if os.getenv("HF_TOKEN") and not os.getenv("DEMO_MODE"):
+    # Presence of HF_TOKEN strongly implies the hosted-demo profile.
+    os.environ.setdefault("DEMO_MODE", "1")
+    os.environ.setdefault("EMBEDDING_PROVIDER", "bm25")
+    os.environ.setdefault("DEMO_LLM_MODEL", "gemini-2.5-flash")
+    os.environ.setdefault("LLM_FAST_MODEL", "gemini-2.5-flash")
+    os.environ.setdefault("WEB_SEARCH_MODEL", "gemini-2.5-flash")
+
 # =====================================================================
 #  Page config & style  (must be the first Streamlit "draw" call)
 # =====================================================================

@@ -7,6 +7,13 @@
 [![LangGraph](https://img.shields.io/badge/LangGraph-Multi--Agent-green.svg)](https://github.com/langchain-ai/langgraph)
 [![Streamlit](https://img.shields.io/badge/Streamlit-Web%20UI-FF4B4B.svg)](https://streamlit.io/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/ShuoSh95/multiagent-investment-debate/pulls)
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-点击试用-FF4B4B.svg)](https://multiagent-investment-debate-jossc2ahmvq6iywxdrwsgp.streamlit.app/)
+
+---
+
+### 🚀 [点击进入在线 Demo →](https://multiagent-investment-debate-jossc2ahmvq6iywxdrwsgp.streamlit.app/)
+
+（免费公开试用 · 每日限量 · 额度用完可围观精选辩论回放）
 
 ---
 
@@ -105,7 +112,9 @@ python -m rag.build_kb --master all --rebuild   # 首次构建大师知识库（
 streamlit run web/streamlit_app.py               # 浏览器打开 http://localhost:8501，开庭！
 ```
 
-🌐 **不想本地装？** 可部署到免费的 [Streamlit Community Cloud](docs/DEPLOY_STREAMLIT.md)（Demo 档：BM25 检索 + Flash 模型 + 每日限量）。
+🌐 **不想本地装？** 直接用公开 Demo：
+[https://multiagent-investment-debate-jossc2ahmvq6iywxdrwsgp.streamlit.app/](https://multiagent-investment-debate-jossc2ahmvq6iywxdrwsgp.streamlit.app/)
+（自建部署见 [DEPLOY_STREAMLIT.md](docs/DEPLOY_STREAMLIT.md)）
 
 装依赖慢、想换模型、想喂自己的电子书、想看检索与辩论机制 →
 **[完整安装与技术文档 docs/SETUP.md](docs/SETUP.md)**
@@ -123,7 +132,7 @@ streamlit run web/streamlit_app.py               # 浏览器打开 http://localh
 
 ## 🗺️ Roadmap
 
-- [x] 🌐 公开在线 Demo（[Streamlit Cloud 部署指南](docs/DEPLOY_STREAMLIT.md)）
+- [x] 🌐 公开在线 Demo（[立即试用](https://multiagent-investment-debate-jossc2ahmvq6iywxdrwsgp.streamlit.app/) · [部署指南](docs/DEPLOY_STREAMLIT.md)）
 - [ ] @指定大师单独追问
 - [ ] 真·串行辩论（后发言者实时看到前面同轮发言）
 - [ ] 辩论中途插话，向大师提问
