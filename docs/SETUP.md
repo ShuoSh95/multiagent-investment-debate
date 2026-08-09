@@ -32,12 +32,15 @@ cd multiagent-investment-debate
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
+# 本地完整版（含 BGE-M3 / torch）。公开 Demo 云端用根目录 requirements.txt（轻量）
 # 如在国内网络，建议用清华镜像加速
-pip install -r requirements.txt \
+pip install -r requirements-full.txt \
     --default-timeout=1800 --retries 10 \
     -i https://pypi.tuna.tsinghua.edu.cn/simple \
     --trusted-host pypi.tuna.tsinghua.edu.cn
 ```
+
+> 公开 Demo 部署到 Streamlit Community Cloud：见 [DEPLOY_STREAMLIT.md](DEPLOY_STREAMLIT.md)。
 
 ## 配置说明 (.env)
 

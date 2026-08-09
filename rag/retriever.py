@@ -8,6 +8,7 @@ Usage:
 
 from __future__ import annotations
 
+import os
 import pickle
 from collections import defaultdict
 from pathlib import Path
@@ -15,7 +16,6 @@ from typing import Dict, List, Optional
 
 from langchain_core.documents import Document
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_openai import ChatOpenAI
 from rank_bm25 import BM25Okapi
 
 from rag.config import (
@@ -29,7 +29,19 @@ from rag.config import (
     TIER_BOOST,
     VECTOR_TOP_K,
 )
-from rag.vectorstore import similarity_search
+
+
+def _bm25_only() -> bool:
+    """Hosted demo skips the local BGE-M3 model (too heavy for ~2.7GB free
+    Cloud RAM). EMBEDDING_PROVIDER=bm25|none|off also forces this path."""
+    provider = os.getenv("EMBEDDING_PROVIDER", "").strip().lower()
+    if provider in ("bm25", "none", "off"):
+        return True
+    try:
+        from llm_provider import is_demo_mode
+        return is_demo_mode()
+    except Exception:
+        return False
 
 
 # ============================================================
@@ -95,6 +107,8 @@ _SELF_QUERY_PROMPT = (
 
 def self_query_rewrite(master_key: str, user_query: str) -> str:
     """Rewrite user query into the master's conceptual language for better retrieval."""
+    from langchain_openai import ChatOpenAI
+
     config = MASTER_CONFIGS.get(master_key, {})
     master_name = config.get("display_name", master_key)
 
@@ -153,7 +167,14 @@ def retrieve(
       2. Parallel Vector + BM25 search
       3. RRF fusion with credibility weighting
       4. Return top-k
+
+    In DEMO_MODE / EMBEDDING_PROVIDER=bm25: BM25-only (no local embedding model).
     """
+    if _bm25_only():
+        return bm25_search(master_key, user_query, top_k=top_k)[:top_k]
+
+    from rag.vectorstore import similarity_search
+
     collection_name = MASTER_CONFIGS[master_key]["collection_name"]
 
     search_query = user_query

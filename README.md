@@ -96,7 +96,7 @@
 git clone https://github.com/ShuoSh95/multiagent-investment-debate.git
 cd multiagent-investment-debate
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-full.txt   # 本地完整版（含 BGE-M3）；云端 Demo 用 requirements.txt
 
 cp .env.example .env          # 填入你的 GOOGLE_API_KEY
 
@@ -105,7 +105,9 @@ python -m rag.build_kb --master all --rebuild   # 首次构建大师知识库（
 streamlit run web/streamlit_app.py               # 浏览器打开 http://localhost:8501，开庭！
 ```
 
-装依赖慢、想换 DeepSeek/Claude 等其他模型、想给大师喂自己买的电子书、想了解检索与辩论机制的实现细节 →
+🌐 **不想本地装？** 可部署到免费的 [Streamlit Community Cloud](docs/DEPLOY_STREAMLIT.md)（Demo 档：BM25 检索 + Flash 模型 + 每日限量）。
+
+装依赖慢、想换模型、想喂自己的电子书、想看检索与辩论机制 →
 **[完整安装与技术文档 docs/SETUP.md](docs/SETUP.md)**
 
 ## ❓ 三个最常被问的问题
@@ -121,7 +123,7 @@ streamlit run web/streamlit_app.py               # 浏览器打开 http://localh
 
 ## 🗺️ Roadmap
 
-- [ ] 🌐 公开在线 Demo（免安装围观）
+- [x] 🌐 公开在线 Demo（[Streamlit Cloud 部署指南](docs/DEPLOY_STREAMLIT.md)）
 - [ ] @指定大师单独追问
 - [ ] 真·串行辩论（后发言者实时看到前面同轮发言）
 - [ ] 辩论中途插话，向大师提问

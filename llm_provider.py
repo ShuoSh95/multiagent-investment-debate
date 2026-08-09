@@ -77,6 +77,12 @@ _PROVIDERS = {
 }
 
 
+def is_demo_mode() -> bool:
+    """Public-demo profile (e.g. HF Spaces): cheaper model, fewer rounds,
+    capped on-demand searches. Enabled via DEMO_MODE=1."""
+    return os.getenv("DEMO_MODE", "").strip().lower() in ("1", "true", "yes")
+
+
 def get_chat_llm(
     temperature: float = 0.7,
     model: Optional[str] = None,
@@ -104,6 +110,11 @@ def get_chat_llm(
         )
 
     model = model or os.getenv("LLM_MODEL") or cfg["default_model"]
+
+    # Demo profile overrides EVERY call (incl. researcher/fast-model asks)
+    # to keep public-demo cost and latency predictable.
+    if is_demo_mode():
+        model = os.getenv("DEMO_LLM_MODEL", "gemini-2.5-flash")
 
     if cfg["flavour"] == "anthropic":
         try:
@@ -154,6 +165,8 @@ def current_provider_summary() -> str:
         return f"provider={provider} (invalid)"
     cfg = _PROVIDERS[provider]
     model = os.getenv("LLM_MODEL") or cfg["default_model"]
+    if is_demo_mode():
+        model = os.getenv("DEMO_LLM_MODEL", "gemini-2.5-flash") + " (demo)"
     key_set = bool(os.getenv(cfg["env_key"])) and not (
         os.getenv(cfg["env_key"], "").startswith("your_")
     )

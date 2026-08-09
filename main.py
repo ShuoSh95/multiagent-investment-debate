@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from llm_provider import current_provider_summary, get_chat_llm
+from llm_provider import current_provider_summary, get_chat_llm, is_demo_mode
 
 
 # ============================================================
@@ -216,7 +216,12 @@ MASTER_PERSONAS = {
 }
 
 MASTER_NAMES = list(MASTER_PERSONAS.keys())
-MAX_ROUNDS = 6
+# Public demo runs a shorter, cheaper debate (see llm_provider.is_demo_mode)
+MAX_ROUNDS = 4 if is_demo_mode() else 6
+
+# In demo mode each master may trigger at most this many on-demand
+# web searches per debate (cost control for the public deployment).
+DEMO_AGENT_SEARCH_CAP = int(os.getenv("DEMO_AGENT_SEARCH_CAP", "1"))
 
 
 # ============================================================
@@ -257,15 +262,15 @@ def collect_market_data(state: AgentState) -> dict:
     # Fresh debate → clear the per-debate on-demand search cache.
     reset_search_cache()
 
-    # Pre-warm the BGE-M3 embedding model BEFORE the parallel master nodes
-    # run, otherwise 5 masters race to do the first load and trigger a
-    # PyTorch meta-tensor error on MPS.
-    try:
-        from rag.embeddings import warmup_local_model
-        print("  🔥 预加载 BGE-M3 嵌入模型 (首次约 10-20s) ...")
-        warmup_local_model()
-    except Exception as e:  # noqa: BLE001
-        print(f"  ⚠️  BGE-M3 预加载失败: {e}")
+    # Pre-warm BGE-M3 only for local hybrid RAG (skipped in DEMO_MODE /
+    # BM25-only hosted deploys — the 2.3GB model won't fit free-tier RAM).
+    if not is_demo_mode() and os.getenv("EMBEDDING_PROVIDER", "local").lower() == "local":
+        try:
+            from rag.embeddings import warmup_local_model
+            print("  🔥 预加载 BGE-M3 嵌入模型 (首次约 10-20s) ...")
+            warmup_local_model()
+        except Exception as e:  # noqa: BLE001
+            print(f"  ⚠️  BGE-M3 预加载失败: {e}")
 
     print("  🔎 正在进行实时 Web 检索 ...")
     text, source = perform_web_search(
@@ -482,7 +487,13 @@ def create_master_node(master_name: str, config: dict):
         # whether it needs extra data this round.
         search_section = ""
         search_log_entry: Optional[dict] = None
-        wanted_query = _assess_data_need(master_name, config, state, current_round)
+        wanted_query = None
+        demo_search_capped = is_demo_mode() and sum(
+            1 for s in state.get("search_log", [])
+            if s.get("master") == master_name
+        ) >= DEMO_AGENT_SEARCH_CAP
+        if not demo_search_capped:
+            wanted_query = _assess_data_need(master_name, config, state, current_round)
         if wanted_query:
             focus = f"{master_name} 的分析视角：{config['persona'][:60]}"
             print(f"  🔍 {master_name} 主动检索: {wanted_query}")

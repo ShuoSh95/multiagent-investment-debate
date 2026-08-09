@@ -131,3 +131,52 @@ def delete_debate(debate_id: int) -> None:
     with _conn_lock:
         _get_conn().execute("DELETE FROM debates WHERE id = ?", (debate_id,))
         _get_conn().commit()
+
+
+def count_debates_today() -> int:
+    """Debates saved today (local time) — used by the demo daily cap."""
+    today = datetime.now().strftime("%Y-%m-%d")
+    with _conn_lock:
+        row = _get_conn().execute(
+            "SELECT COUNT(*) AS n FROM debates WHERE created_at LIKE ?",
+            (f"{today}%",),
+        ).fetchone()
+    return int(row["n"])
+
+
+def seed_from_gallery(gallery_dir) -> int:
+    """One-time import of curated debates (web/gallery/*.json) into an
+    EMPTY database. Gives fresh public deployments (ephemeral disk) a
+    set of showcase debates visitors can replay. Returns rows added."""
+    gallery_dir = Path(gallery_dir)
+    if not gallery_dir.is_dir():
+        return 0
+    with _conn_lock:
+        row = _get_conn().execute("SELECT COUNT(*) AS n FROM debates").fetchone()
+        if int(row["n"]) > 0:
+            return 0
+        added = 0
+        for f in sorted(gallery_dir.glob("*.json")):
+            try:
+                d = json.loads(f.read_text(encoding="utf-8"))
+                _get_conn().execute(
+                    """
+                    INSERT INTO debates(created_at, query, final_report,
+                                        transcript, followup, model)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        d.get("created_at")
+                        or datetime.now().isoformat(timespec="seconds"),
+                        d["query"],
+                        d["final_report"],
+                        json.dumps(d["transcript"], ensure_ascii=False),
+                        json.dumps(d.get("followup", []), ensure_ascii=False),
+                        d.get("model", ""),
+                    ),
+                )
+                added += 1
+            except Exception as e:  # noqa: BLE001
+                print(f"[gallery] skip {f.name}: {e}")
+        _get_conn().commit()
+        return added

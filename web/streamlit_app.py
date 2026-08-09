@@ -33,9 +33,22 @@ load_dotenv(_ROOT / ".env")
 
 import streamlit as st
 
-from web import history_db
+from web import history_db, rate_limit
 from web.debate_runner import run_debate
-from llm_provider import current_provider_summary, get_chat_llm
+from llm_provider import current_provider_summary, get_chat_llm, is_demo_mode
+
+# ---- Hosted-deployment bootstrap (both are no-ops on a local install) --
+# 1. Seed showcase debates into an empty history DB (ephemeral disk on
+#    HF Spaces starts blank after every restart).
+history_db.seed_from_gallery(_ROOT / "web" / "gallery")
+# 2. Fetch the vector store / BM25 index from the private HF dataset if
+#    they are missing (normally baked into the Docker image at build).
+try:
+    from rag.fetch_kb import ensure_kb
+
+    ensure_kb()
+except Exception as _e:  # noqa: BLE001
+    print(f"[bootstrap] KB fetch skipped: {_e}")
 
 
 # =====================================================================
@@ -110,6 +123,8 @@ def _init_state() -> None:
         "debate_id": None,          # int after save
         "followup": [],             # list[dict{role, content}]
         "loaded_from_history": False,
+        # NOT reset by 新建辩论 — enforces the per-session demo cap
+        "debates_started": 0,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -137,7 +152,12 @@ def _render_sidebar() -> None:
             st.rerun()
 
         st.divider()
-        st.markdown("#### 📚 历史辩论")
+        if is_demo_mode():
+            st.markdown("#### 🎬 精选回放 & 历史辩论")
+            used = history_db.count_debates_today()
+            st.caption(f"今日公共辩论额度：{used}/{rate_limit.daily_limit()}")
+        else:
+            st.markdown("#### 📚 历史辩论")
         debates = history_db.list_debates(limit=30)
         if not debates:
             st.caption("（暂无历史记录）")
@@ -518,6 +538,15 @@ st.caption(
     "+ 实时 Web 数据，就您的投资问题展开辩论，最终给出综合建议。"
 )
 
+if is_demo_mode():
+    st.info(
+        "🎪 **公开 Demo**：为控制成本，Demo 使用轻量模型、最多 4 轮辩论、"
+        f"每日限 {rate_limit.daily_limit()} 场、每位访客限 {rate_limit.session_limit()} 场。"
+        "额度用完时，欢迎在侧边栏围观精选辩论回放。"
+        "想不限量地使用完整版（深度推理模型 / 6 轮辩论），请到 "
+        "[GitHub](https://github.com/ShuoSh95/multiagent-investment-debate) 本地部署。"
+    )
+
 stage = st.session_state["stage"]
 
 if stage == "idle":
@@ -531,31 +560,58 @@ if stage == "idle":
         with col1:
             submit = st.form_submit_button("🚀 开始辩论", type="primary", use_container_width=True)
         with col2:
-            st.caption(
-                "⏱️ 一场辩论通常 5–15 分钟（Gemini 2.5 Pro 推理较慢但更深入）"
-            )
+            if is_demo_mode():
+                st.caption("⏱️ Demo 档位：轻量模型 · 最多 4 轮 · 一场约 3–6 分钟")
+            else:
+                st.caption(
+                    "⏱️ 一场辩论通常 5–15 分钟（Gemini 2.5 Pro 推理较慢但更深入）"
+                )
 
     if submit and q.strip():
-        # Transition to running state and rerun. The running branch below
-        # will actually execute the debate so the form above is hidden.
-        st.session_state.update(
-            stage="running",
-            query=q.strip(),
-            market_data="",
-            rounds=[],
-            final_report="",
-            followup=[],
-            debate_id=None,
-            loaded_from_history=False,
-        )
-        st.rerun()
+        ok, reason = (True, "")
+        if is_demo_mode():
+            ok, reason = rate_limit.check_quota(
+                st.session_state.get("debates_started", 0)
+            )
+        if not ok:
+            st.warning(reason)
+        else:
+            # Transition to running state and rerun. The running branch
+            # below will actually execute the debate so the form is hidden.
+            st.session_state.update(
+                stage="running",
+                query=q.strip(),
+                market_data="",
+                rounds=[],
+                final_report="",
+                followup=[],
+                debate_id=None,
+                loaded_from_history=False,
+            )
+            st.rerun()
 
 elif stage == "running":
     st.markdown(f"### 📋 问题\n> {st.session_state['query']}")
-    _stream_debate(st.session_state["query"])
-    # _stream_debate sets stage to "done" when successful (or back to
-    # "idle" on error); rerun to show the clean final layout + followup
-    st.rerun()
+    if is_demo_mode() and not rate_limit.try_acquire_slot():
+        st.warning(
+            "⏳ 当前有另一场辩论正在进行（公共资源同一时刻只跑一场，"
+            "避免触发 API 限速）。请几分钟后重试，或先在侧边栏围观精选回放。"
+        )
+        st.session_state["stage"] = "idle"
+        if st.button("← 返回"):
+            st.rerun()
+    else:
+        st.session_state["debates_started"] = (
+            st.session_state.get("debates_started", 0) + 1
+        )
+        try:
+            _stream_debate(st.session_state["query"])
+        finally:
+            if is_demo_mode():
+                rate_limit.release_slot()
+        # _stream_debate sets stage to "done" when successful (or back to
+        # "idle" on error); rerun to show the clean final layout + followup
+        st.rerun()
 
 elif stage == "done":
     st.markdown(f"### 📋 问题\n> {st.session_state['query']}")
@@ -563,3 +619,10 @@ elif stage == "done":
         st.caption(f"🕐 历史辩论 #{st.session_state['debate_id']}（只读回放）")
     _render_all_past_rounds()
     _render_followup_section()
+
+st.divider()
+st.caption(
+    "⚠️ 本项目为多 Agent 技术的研究与娱乐演示。「大师」均为基于公开资料的 AI 模拟，"
+    "不代表真实人物观点；全部输出由大语言模型生成，可能存在错误或幻觉，"
+    "**不构成任何投资建议**。股市有风险，据此操作盈亏自负。"
+)

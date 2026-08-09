@@ -1,22 +1,14 @@
+# Lightweight deps for Streamlit Community Cloud (public demo).
+# Local full install (with BGE-M3):  pip install -r requirements-full.txt
 langchain-openai
-# Optional: only needed if LLM_PROVIDER=anthropic
-langchain-anthropic
-# Only needed if LLM_PROVIDER=gemini
 langchain-google-genai
 google-genai
 langchain-core
 langchain-text-splitters
 langgraph
 python-dotenv
-chromadb
-pypdf
-cryptography
-beautifulsoup4
 rank-bm25
 requests
-ebooklib
-# Local embedding (BGE-M3). Install pulls in torch (~2GB). Comment out
-# if you plan to use OpenAI embeddings exclusively.
-sentence-transformers
-# Web UI (v1.0)
+beautifulsoup4
+huggingface_hub
 streamlit
