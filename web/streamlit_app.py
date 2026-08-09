@@ -33,26 +33,28 @@ load_dotenv(_ROOT / ".env")
 
 import streamlit as st
 
-from web import history_db, rate_limit
-from web.debate_runner import run_debate
-from llm_provider import current_provider_summary, get_chat_llm, is_demo_mode
 
-# ---- Hosted-deployment bootstrap (both are no-ops on a local install) --
-# 1. Seed showcase debates into an empty history DB (ephemeral disk on
-#    HF Spaces starts blank after every restart).
-history_db.seed_from_gallery(_ROOT / "web" / "gallery")
-# 2. Fetch the vector store / BM25 index from the private HF dataset if
-#    they are missing (normally baked into the Docker image at build).
-try:
-    from rag.fetch_kb import ensure_kb
+def _sync_streamlit_secrets_to_env() -> None:
+    """Streamlit Cloud injects secrets via st.secrets; our code reads os.environ.
+    Copy top-level string secrets into the environment so Gemini / HF / DEMO_*
+    all work the same way locally and on Cloud."""
+    try:
+        secrets = st.secrets
+    except Exception:
+        return
+    for key in secrets:
+        try:
+            val = secrets[key]
+        except Exception:
+            continue
+        if isinstance(val, (str, int, float, bool)):
+            os.environ.setdefault(str(key), str(val))
 
-    ensure_kb()
-except Exception as _e:  # noqa: BLE001
-    print(f"[bootstrap] KB fetch skipped: {_e}")
 
+_sync_streamlit_secrets_to_env()
 
 # =====================================================================
-#  Page config & style
+#  Page config & style  (must be the first Streamlit "draw" call)
 # =====================================================================
 st.set_page_config(
     page_title="AI 投资决策器 · 多大师辩论",
@@ -60,6 +62,36 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+from web import history_db, rate_limit
+from web.debate_runner import run_debate
+from llm_provider import current_provider_summary, get_chat_llm, is_demo_mode
+
+# ---- Hosted-deployment bootstrap (both are no-ops on a local install) --
+# 1. Seed showcase debates into an empty history DB (ephemeral disk on
+#    Cloud starts blank after every restart).
+history_db.seed_from_gallery(_ROOT / "web" / "gallery")
+# 2. Fetch the vector store / BM25 index from the private HF dataset if
+#    they are missing.
+_kb_ok = True
+try:
+    from rag.fetch_kb import ensure_kb
+
+    _kb_ok = bool(ensure_kb())
+except Exception as _e:  # noqa: BLE001
+    _kb_ok = False
+    print(f"[bootstrap] KB fetch skipped: {_e}")
+
+
+def _missing_cloud_config() -> list[str]:
+    """Return human-readable list of required secrets that are absent."""
+    missing: list[str] = []
+    gkey = os.getenv("GOOGLE_API_KEY", "")
+    if not gkey or gkey.startswith("your_"):
+        missing.append("GOOGLE_API_KEY（Gemini）")
+    if is_demo_mode() and not os.getenv("HF_TOKEN"):
+        missing.append("HF_TOKEN（用于拉取私有知识库）")
+    return missing
 
 _CUSTOM_CSS = """
 <style>
@@ -538,7 +570,22 @@ st.caption(
     "+ 实时 Web 数据，就您的投资问题展开辩论，最终给出综合建议。"
 )
 
-if is_demo_mode():
+_missing = _missing_cloud_config()
+if _missing:
+    st.error(
+        "⚙️ **应用尚未配置完成**：请到 Streamlit Cloud → 该 App 的 "
+        "**Settings → Secrets** 粘贴密钥后点 Save，再 **Reboot**。\n\n"
+        "缺少：" + "、".join(_missing) + "\n\n"
+        "完整 TOML 模板见仓库 [docs/DEPLOY_STREAMLIT.md]"
+        "(https://github.com/ShuoSh95/multiagent-investment-debate/blob/main/docs/DEPLOY_STREAMLIT.md)。"
+    )
+elif is_demo_mode() and not _kb_ok:
+    st.warning(
+        "📚 知识库尚未就绪（HF_TOKEN 无效或网络拉取失败）。"
+        "侧边栏精选回放仍可围观；实时辩论的原著引用可能为空。"
+    )
+
+if is_demo_mode() and not _missing:
     st.info(
         "🎪 **公开 Demo**：为控制成本，Demo 使用轻量模型、最多 4 轮辩论、"
         f"每日限 {rate_limit.daily_limit()} 场、每位访客限 {rate_limit.session_limit()} 场。"
@@ -568,27 +615,30 @@ if stage == "idle":
                 )
 
     if submit and q.strip():
-        ok, reason = (True, "")
-        if is_demo_mode():
-            ok, reason = rate_limit.check_quota(
-                st.session_state.get("debates_started", 0)
-            )
-        if not ok:
-            st.warning(reason)
+        if _missing_cloud_config():
+            st.error("请先在 Streamlit Cloud Settings → Secrets 配置好密钥，再开始辩论。")
         else:
-            # Transition to running state and rerun. The running branch
-            # below will actually execute the debate so the form is hidden.
-            st.session_state.update(
-                stage="running",
-                query=q.strip(),
-                market_data="",
-                rounds=[],
-                final_report="",
-                followup=[],
-                debate_id=None,
-                loaded_from_history=False,
-            )
-            st.rerun()
+            ok, reason = (True, "")
+            if is_demo_mode():
+                ok, reason = rate_limit.check_quota(
+                    st.session_state.get("debates_started", 0)
+                )
+            if not ok:
+                st.warning(reason)
+            else:
+                # Transition to running state and rerun. The running branch
+                # below will actually execute the debate so the form is hidden.
+                st.session_state.update(
+                    stage="running",
+                    query=q.strip(),
+                    market_data="",
+                    rounds=[],
+                    final_report="",
+                    followup=[],
+                    debate_id=None,
+                    loaded_from_history=False,
+                )
+                st.rerun()
 
 elif stage == "running":
     st.markdown(f"### 📋 问题\n> {st.session_state['query']}")
